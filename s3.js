@@ -15,6 +15,10 @@ function isFolder(key) {
   return key.endsWith('/');
 }
 
+function isHTML(key) {
+  return key.endsWith('html');
+}
+
 function createDownloadLink(key) {
   let urlEncodedKey = encodeURIComponent(key)
   const url = `https://${bucketName}.${s3Domain}/${urlEncodedKey}`;
@@ -32,7 +36,9 @@ function createDownloadLink(key) {
     textSpan.textContent = key.slice(0, -1).split('/').pop();
   } else {
     textSpan.textContent = key.split('/').pop();
-    link.setAttribute('download', '');
+    if (!isHTML(key)) {
+      link.setAttribute('download', '');
+    }
   }
 
   // Append the icon and the text span to the link
