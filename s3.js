@@ -113,11 +113,11 @@ function listObjects(path) {
       const xmlDoc = parser.parseFromString(text, 'text/xml');
       const keys = xmlDoc.getElementsByTagName('Key');
       const prefixes = xmlDoc.getElementsByTagName('Prefix');
-      
+
       // Pagination logic
       const startIndex = (currentPage - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
-    
+
       // Slice the items based on pagination
       const displayedPrefixes = Array.from(prefixes).slice(startIndex, endIndex);
       const displayedKeys = Array.from(keys).slice(startIndex, endIndex - displayedPrefixes.length);
@@ -179,7 +179,7 @@ function listObjects(path) {
         objectList.appendChild(row);
       });
 
-      updateBreadcrumb(path);      
+      updateBreadcrumb(path);
       updatePaginationControls();
       loading.classList.add('d-none');
       loading.classList.add('d-none');
@@ -219,7 +219,7 @@ darkModeSwitch.addEventListener('change', (e) => {
     darkModeStyle.disabled = true;
     localStorage.setItem('darkMode', 'false');
   }
-  
+
 });
 
 const darkModeStyle = document.getElementById('dark-mode-style');

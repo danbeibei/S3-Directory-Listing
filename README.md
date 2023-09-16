@@ -39,7 +39,7 @@ The following steps apply to AWS S3 buckets, they might differ depending on your
         }
     ]
 }
-``` 
+```
 Or you can use an IP Policy for your bucket if you need.
 
 ```json
