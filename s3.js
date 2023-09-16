@@ -114,7 +114,7 @@ function listObjects(path) {
       const keys = xmlDoc.getElementsByTagName('Key');
       const prefixes = xmlDoc.getElementsByTagName('Prefix');
 
-      
+
   // Pagination logic
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -180,7 +180,7 @@ objectList.innerHTML = '';
 
       updateBreadcrumb(path);
 
-      
+
   updatePaginationControls();
   loading.classList.add('d-none');
 loading.classList.add('d-none');
@@ -220,7 +220,7 @@ darkModeSwitch.addEventListener('change', (e) => {
     darkModeStyle.disabled = true;
     localStorage.setItem('darkMode', 'false');
   }
-  
+
 });
 
 const darkModeStyle = document.getElementById('dark-mode-style');
