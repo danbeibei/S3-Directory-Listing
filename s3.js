@@ -100,9 +100,14 @@ function formatSize(size) {
   return `${size.toFixed(2)} ${units[index]}`;
 }
 
-function listObjects(path) {
+function listObjects(path, continuationToken = null) {
   const prefix = path ? `prefix=${path}&` : '';
-  const url = `https://${bucketName}.${s3Domain}/?list-type=2&${prefix}delimiter=%2F`;
+  const maxKeys = 1000;
+  let url = `https://${bucketName}.${s3Domain}/?list-type=2&${prefix}delimiter=%2F&max-keys=${maxKeys}`;
+
+  if (continuationToken) {
+    url += `&continuation-token=${encodeURIComponent(continuationToken)}`;
+  }
 
   loading.classList.remove('d-none');
   errorAlert.classList.add('d-none');
@@ -120,28 +125,16 @@ function listObjects(path) {
       const keys = xmlDoc.getElementsByTagName('Key');
       const prefixes = xmlDoc.getElementsByTagName('Prefix');
 
-      // Pagination logic
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
+      const isTruncated = xmlDoc.querySelector('IsTruncated')?.textContent === 'true';
+      const nextContinuationToken = xmlDoc.querySelector('NextContinuationToken')?.textContent;
 
-      // Slice the items based on pagination
-      const displayedPrefixes = Array.from(prefixes).slice(startIndex, endIndex);
-      const displayedKeys = Array.from(keys).slice(startIndex, endIndex - displayedPrefixes.length);
-      let totalItems = prefixes.length + keys.length;
-      totalPages = Math.ceil(totalItems / itemsPerPage);
-      const nextContinuationToken = xmlDoc.querySelector('NextContinuationToken') ? xmlDoc.querySelector('NextContinuationToken').textContent : null;
-      if (nextContinuationToken) {
-        // Enable the "Next" button since there are more items to fetch
-        document.getElementById('nextPage').addEventListener('click', function() {
-          listObjects(currentPath, nextContinuationToken);
-        });
-      } else {
-        document.getElementById('nextPage').disabled = true;
+      // If this is a fresh request (no continuation token), clear the list
+      if (!continuationToken) {
+        objectList.innerHTML = '';
       }
 
-      objectList.innerHTML = '';
-
-      displayedPrefixes.forEach((prefix) => {
+      // Process current batch of prefixes
+      Array.from(prefixes).forEach((prefix) => {
         const key = prefix.textContent;
         if (key === path) {
           return;
@@ -162,7 +155,8 @@ function listObjects(path) {
         objectList.appendChild(row);
       });
 
-      displayedKeys.forEach((keyElement) => {
+      // Process current batch of keys
+      Array.from(keys).forEach((keyElement) => {
         const key = keyElement.textContent;
         if (key === 'index.html' || key === 's3.js' || key === 'dark-mode.css' || key === 'config.js') {
           return;
@@ -185,10 +179,27 @@ function listObjects(path) {
         objectList.appendChild(row);
       });
 
-      updateBreadcrumb(path);
-      updatePaginationControls();
-      loading.classList.add('d-none');
-      loading.classList.add('d-none');
+      // If there are more items to fetch, get them
+      if (isTruncated && nextContinuationToken) {
+        listObjects(path, nextContinuationToken);
+      } else {
+        // Apply pagination after all items are fetched
+        const rows = Array.from(objectList.getElementsByTagName('tr'));
+        const totalItems = rows.length;
+        totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+        // Hide all rows first
+        rows.forEach(row => row.style.display = 'none');
+
+        // Show only rows for current page
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        rows.slice(startIndex, endIndex).forEach(row => row.style.display = '');
+
+        updateBreadcrumb(path);
+        updatePaginationControls();
+        loading.classList.add('d-none');
+      }
     })
     .catch((error) => {
       console.error('Error fetching objects:', error);
